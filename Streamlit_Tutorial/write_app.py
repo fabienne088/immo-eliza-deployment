@@ -6,7 +6,7 @@ import streamlit as st
 st.header('st.write')
 
 # Example 1: Markdown-formatted text
-st.write('Hello, *World!*: sunglasses:')
+st.write('Hello, *World!*:sunglasses:')
 
 # Example 2: numbers
 
