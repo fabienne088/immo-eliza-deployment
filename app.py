@@ -1,8 +1,13 @@
 import pandas as pd
+import numpy as np
 import streamlit as st
 import gzip
 import pickle
-from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestRegressor
 
 # Read the csv file
 df = pd.read_csv(r"data\cleaned_properties.csv")
@@ -13,7 +18,7 @@ X = df_house.drop(columns=['price', 'subproperty_type', 'property_type', 'region
 y = df_house['price']
 
 # Split the data into training and test data
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=0.2)
+#X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=0.2)
 
 
 st.title("House price prediction app")
@@ -26,25 +31,25 @@ primary_energy_consumption_sqm, epc, heating_type, fl_double_glazing.
 # Location
 st.subheader("Location")
 
-province = st.selectbox("**Province**",
+province = st.selectbox("**Province!**",
    options=sorted(X['province'].unique()),
    index=None, placeholder="Select a province ...")
 st.write('You selected:', province)
 
 zip_code = st.number_input('**Postal code**', 
-    min_value = X['zip_code'].min(), max_value=X['zip_code'].max(), 
-    value=None, placeholder="Enter a postal code")
+    min_value = int(X['zip_code'].min()), max_value=int(X['zip_code'].max()), 
+    placeholder="Enter a postal code")
 st.write('The postal code is:', zip_code)
 
 # Infrastructure
 st.divider()
 st.subheader("Infrastructure")
 
-surface_land_sqm = st.slider('**Surface land**', 
+surface_land_sqm = st.slider('**Surface Land (sqm)**', 
     min_value=0.0, max_value=X['surface_land_sqm'].max())
 st.write(f"The surface land is: {surface_land_sqm}","sqm")
 
-total_area_sqm = st.slider('**Total living area**', 
+total_area_sqm = st.slider('**Total Living Area (sqm)**', 
     min_value=0.0, max_value=X['total_area_sqm'].max())
 st.write(f"The total living area is: {total_area_sqm}","sqm")
 
@@ -142,6 +147,22 @@ double_glazing = double_glazing_str == 'Yes'
 fl_double_glazing = int(double_glazing)
 st.write('You selected:', double_glazing_str)
 
+def predict(data):
+
+    # Load the preprocessor
+    with gzip.open(r"model\preprocessor.pkl", 'rb') as f:
+        preprocessor = pickle.load(f)
+    
+    data_processed = preprocessor.transform(data)
+    
+    # Import the model
+    with gzip.open(r"model\random_forest_regressor.pkl", 'rb') as f:
+        model = pickle.load(f)
+    
+    # Predict the price of the new house
+    prediction = model.predict(data_processed)
+
+    return prediction.tolist()[0]
 
 data = {
     'province': province,
@@ -164,61 +185,12 @@ data = {
     'fl_double_glazing': fl_double_glazing
 }
 
-# Define row
-
-#row = np.array([province, zip_code, total_area_sqm, surface_land_sqm, 
-#nbr_bedrooms, equipped_kitchen, fl_furnished, fl_open_fire, fl_terrace, terrace_sqm, 
-#fl_garden, garden_sqm, fl_swimming_pool, state_building, 
-#primary_energy_consumption_sqm, epc, heating_type, fl_double_glazing]) 
-
-# Define columns
-# columns = X.columns.tolist()
-
-
 # Create a new DataFrame
 new_data_df = pd.DataFrame(data, index=[0])
+print(new_data_df.info())
 
-# Load the preprocessor
-with gzip.open(r"model\preprocessor.pkl", 'rb') as f:
-    preprocessor = pickle.load(f)
-# Import the model
-with gzip.open(r"model\random_forest_regressor.pkl", 'rb') as f:
-    model = pickle.load(f)
+#Perform prediction z-when button is clicked
+if st.button('Predict'):
+    predicted_price = predict(new_data_df)
+    st.success(f"The price of the new house will be: € {predicted_price:.2f}")
 
-def preprocess_data_for_test(X_test, preprocessor):
-    """Preprocesses test data including imputation, encoding, and scaling.
-
-    Parameters:
-        X_test (pandas DataFrame): Input test DataFrame.
-        preprocessor (sklearn ColumnTransformer): Fitted preprocessor used to transform the test data.
-
-    Returns:
-        pandas DataFrame: Preprocessed test DataFrame.
-    """
-    # Transform the test data using the fitted preprocessor
-    X_test_processed = preprocessor.transform(X_test)
-
-    # Get the column names for the transformed data
-    numeric_cols = X_test.select_dtypes(include=['int64', 'float64']).columns
-    categorical_cols = X_test.select_dtypes(include=['object']).columns
-
-    transformed_columns = numeric_cols.tolist() + \
-                          preprocessor.named_transformers_['cat'].named_steps['onehot'] \
-                          .get_feature_names_out(categorical_cols).tolist()
-
-    # Convert the processed data into a DataFrame
-    X_test_processed = pd.DataFrame(X_test_processed, columns=transformed_columns)
-
-    return new_data_processed
-
-# Preprocess test data using the preprocessor object
-new_data_processed = preprocess_data_for_test(new_data_df, preprocessor)
-
-prediction = model.predict(new_data_processed)
-
-
-#def predict():
-
-
-
-#trigger = st.button('Predict', on_click=predict)

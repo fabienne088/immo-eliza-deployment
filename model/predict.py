@@ -65,4 +65,4 @@ with gzip.open(r"model\random_forest_regressor.pkl", 'rb') as f:
 #print(type(loaded_regressor))
 
 y_new_pred = loaded_regressor.predict(new_data_processed)
-print(f"The price of a new house will be: {y_new_pred[0]:.2f}","€")
+print(f"The price of a new house will be: € {y_new_pred[0]:.2f}")

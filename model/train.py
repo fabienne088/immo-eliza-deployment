@@ -9,7 +9,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestRegressor
 import pickle
-import gzip
+import gzip#
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, root_mean_squared_error
 
 def explore_df(df):
@@ -83,7 +83,7 @@ def prepare_data(df_house):
         y_test (Series): Target variable for testing.
     """    
     # Name X and y
-    X = df_house.drop(columns=['price', 'subproperty_type', 'property_type', 'region', 'locality', 'construction_year', 'cadastral_income', 'nbr_frontages', 'fl_floodzone'])
+    X = df_house.drop(columns=['price', 'property_type', 'subproperty_type', 'region', 'locality', 'construction_year', 'nbr_frontages', 'fl_floodzone', 'cadastral_income'])
     y = df_house['price']
 
     # Split the data into training and test data
