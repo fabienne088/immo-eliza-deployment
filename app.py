@@ -22,17 +22,19 @@ y = df_house['price']
 # Split the data into training and test data
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=0.2)
 
-#colored_header(
-        #label="House price prediction app", description="This app will predict the price of a new house",
-        #color_name="violet-70",)
 
 st.title(":green[House] price :blue[prediction] app")
 
 st.image('./src/the-logo-of-home-housing-residents-real-estate-with-a-concept-that-presents-rural-nature-with-a-touch-of-leaves-and-sunflowers-vector.jpg')
 
-st.write("This app will predict the price of a new house.")
+st.write("This app will predict the price of your new house.")
 
-st.sidebar.text('The features are: province, postal code, total_area_sqm, surface_land_sqm, nbr_bedrooms, equipped_kitchen, fl_furnished, fl_open_fire, fl_terrace, terrace_sqm, fl_garden, garden_sqm, fl_swimming_pool, state_building, primary_energy_consumption_sqm, epc, heating_type, fl_double_glazing')
+st.sidebar.markdown("The features are:"
+                " province, postal code, total area (sqm), surface land (sqm)," 
+                " number of bedrooms, equipped kitchen, furnished, open fire,"
+                " terrace, terrace (sqm), garden, garden (sqm), swimming pool,"
+                " building condition, primary energy consumption (sqm), epc,"
+                " heating type, and double glazing. ")
 
 # Location
 st.subheader("Location")
@@ -125,7 +127,7 @@ st.subheader("Building condition")
 
 state_building = st.selectbox("**State**", 
     options=sorted(X['state_building'].dropna().unique()),
-    index=None, placeholder="Select state_building ...")
+    index=None, placeholder="Select condition ...")
 st.write('You selected:', state_building)
 
 st.divider()
