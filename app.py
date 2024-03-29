@@ -11,7 +11,7 @@ from sklearn.ensemble import RandomForestRegressor
 
 # Read the csv file
 #df = pd.read_csv(r"data\cleaned_properties.csv")
-df = pd.read_csv("../data/cleaned_properties.csv")
+df = pd.read_csv(".data/cleaned_properties.csv")
 df_house = df[(df["property_type"] == "HOUSE") & (df['subproperty_type'] != 'APARTMENT_BLOCK')]
 
 # Name X and y
