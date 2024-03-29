@@ -3,6 +3,7 @@ import numpy as np
 import streamlit as st
 import gzip
 import pickle
+from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
@@ -10,7 +11,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestRegressor
 
 # Read the csv file
-#df = pd.read_csv(r"data\cleaned_properties.csv")
 df = pd.read_csv("./data/cleaned_properties.csv")
 df_house = df[(df["property_type"] == "HOUSE") & (df['subproperty_type'] != 'APARTMENT_BLOCK')]
 
@@ -19,7 +19,7 @@ X = df_house.drop(columns=['price', 'subproperty_type', 'property_type', 'region
 y = df_house['price']
 
 # Split the data into training and test data
-#X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=0.2)
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=0.2)
 
 
 st.title("House price prediction app")
@@ -151,13 +151,13 @@ st.write('You selected:', double_glazing_str)
 def predict(data):
 
     # Load the preprocessor
-    with gzip.open(r"model\preprocessor.pkl", 'rb') as f:
+    with gzip.open('./model/preprocessor.pkl', 'rb') as f:
         preprocessor = pickle.load(f)
     
     data_processed = preprocessor.transform(data)
     
     # Import the model
-    with gzip.open(r"model\random_forest_regressor.pkl", 'rb') as f:
+    with gzip.open('./model/random_forest_regressor.pkl', 'rb') as f:
         model = pickle.load(f)
     
     # Predict the price of the new house

@@ -8,45 +8,27 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestRegressor
-import pickle
-import gzip#
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, root_mean_squared_error
+import pickle
+import gzip
 
-def explore_df(df):
-    """ This function reads a CSV file, displays basic information about 
-    the df, and returns descriptive statistics of the data.
+# Read the csv file
+df = pd.read_csv("./data/cleaned_properties.csv")
 
-    Parameters:
-        file_path (str): Path to the CSV file.
+# Display the first lines of the df
+print(df.head().T)
+print()
 
-    Returns:
-        df (DataFrame): The DataFrame read from the CSV file.
-    """
-    # Read the CSV file into a DataFrame
-    #df = pd.read_csv(file_path)
+# Display the number of proporties and features
+num_properties, num_features = df.shape
+print(f"There are {num_properties} proporties and {num_features} features.\n")
 
-    # Display the first lines of the df
-    #print(df.head().T)
-    #print()
-
-    # Display the number of proporties and features
-    #num_properties, num_features = df.shape
-    #print(f"There are {num_properties} proporties and {num_features} features.\n")
-
-    # Display the features:
-    #print(f"The features are: {', '.join([str(feature)for feature in df.columns])}.\n")
+# Display the features:
+print(f"The features are: {', '.join([str(feature)for feature in df.columns])}.\n")
      
-    # Display the descriptive statistics
-    #print(df.describe(include="all").T)
-    #print()
-
-    # return the df
-    return df
-
-# Specify the file path
-df = pd.read_csv(r"data\cleaned_properties.csv")
-# Call the function to explore the data
-explore_df(df)
+# Display the descriptive statistics
+print(df.describe(include="all").T)
+print()
 
 
 def filter_houses(df):
@@ -99,118 +81,60 @@ def prepare_data(df_house):
 X_train, X_test, y_train, y_test = prepare_data(df_house)
 
 
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.compose import ColumnTransformer
-import pandas as pd
+## Preprocess the data
 
-def preprocess_data(X_train):
-    """Preprocesses training data including imputation, encoding, and scaling.
+# Separate numerical and categorical columns
+numeric_cols = X_train.select_dtypes(include=['int64', 'float64']).columns
+categorical_cols = X_train.select_dtypes(include=['object']).columns
 
-    Args:
-        X_train (pandas DataFrame): Input training DataFrame.
+# Define preprocessing steps for numerical and categorical data
+numeric_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='mean')),
+    ('scaler', StandardScaler())
+])
 
-    Returns:
-        pandas DataFrame: Preprocessed training DataFrame.
-    """    
-    # Separate numerical and categorical columns
-    numeric_cols = X_train.select_dtypes(include=['int64', 'float64']).columns
-    categorical_cols = X_train.select_dtypes(include=['object']).columns
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
 
-    # Define preprocessing steps for numerical and categorical data
-    numeric_transformer = Pipeline(steps=[
-        ('imputer', SimpleImputer(strategy='mean')),
-        ('scaler', StandardScaler())
+# Combine preprocessing steps
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_cols),
+        ('cat', categorical_transformer, categorical_cols)
     ])
 
-    categorical_transformer = Pipeline(steps=[
-        ('imputer', SimpleImputer(strategy='most_frequent')),
-        ('onehot', OneHotEncoder(handle_unknown='ignore'))
-    ])
+# Fit the preprocessor to the training data
+preprocessed = preprocessor.fit(X_train)
+# Transform the train data using the fitted preprocessor
+X_train_processed = preprocessed.transform(X_train)
+# Transform the test data using the fitted preprocessor
+X_test_processed = preprocessed.transform(X_test)
 
-    # Combine preprocessing steps
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('num', numeric_transformer, numeric_cols),
-            ('cat', categorical_transformer, categorical_cols)
-        ])
+# Save the preprocessod object to a file
+with gzip.open('./model/preprocessor.pkl', 'wb') as f:
+    pickle.dump(preprocessed, f)
 
-    # Fit and transform the preprocessing steps on training data
-    X_train_processed = preprocessor.fit_transform(X_train)
+# Get the column names for the transformed data
+transformed_columns = numeric_cols.tolist() + \
+                        preprocessor.named_transformers_['cat'].named_steps['onehot'] \
+                        .get_feature_names_out(categorical_cols).tolist()
 
-    # Convert the processed data into DataFrames
-    X_train_processed = pd.DataFrame(X_train_processed, columns=numeric_cols.tolist() +
-                                     preprocessor.named_transformers_['cat']
-                                     .named_steps['onehot'].get_feature_names_out(categorical_cols).tolist())
-    
-    return X_train_processed, preprocessor
-
-# Preprocess training data and obtain the preprocessor object
-X_train_processed, preprocessor = preprocess_data(X_train)
-# Save the preprocessor to a file
-with gzip.open(r"model\preprocessor.pkl", 'wb') as f:
-    pickle.dump(preprocessor, f)
+# Convert the processed data into a DataFrame
+X_test_processed_df = pd.DataFrame(X_test_processed, columns=transformed_columns)
+print(X_test_processed_df.head().T)
 
 
-def preprocess_data_for_test(X_test, preprocessor):
-    """Preprocesses test data including imputation, encoding, and scaling.
+## Train model
 
-    Parameters:
-        X_test (pandas DataFrame): Input test DataFrame.
-        preprocessor (sklearn ColumnTransformer): Fitted preprocessor used to transform the test data.
-
-    Returns:
-        pandas DataFrame: Preprocessed test DataFrame.
-    """
-    # Transform the test data using the fitted preprocessor
-    X_test_processed = preprocessor.transform(X_test)
-
-    # Get the column names for the transformed data
-    numeric_cols = X_test.select_dtypes(include=['int64', 'float64']).columns
-    categorical_cols = X_test.select_dtypes(include=['object']).columns
-
-    transformed_columns = numeric_cols.tolist() + \
-                          preprocessor.named_transformers_['cat'].named_steps['onehot'] \
-                          .get_feature_names_out(categorical_cols).tolist()
-
-    # Convert the processed data into a DataFrame
-    X_test_processed = pd.DataFrame(X_test_processed, columns=transformed_columns)
-
-    return X_test_processed
-
-
-# Preprocess test data using the preprocessor object
-X_test_processed = preprocess_data_for_test(X_test, preprocessor)
-# Save the preprocess_data_for_test to a file
-# with gzip.open('preprocessing.pkl', 'wb') as f:
-    # pickle.dump(preprocess_data_for_test, f)
-
-
-def train_model(X_train_processed, y_train, n_estimators=100, random_state=42):
-    """Initialize and train a Random Forest Regressor model.
-
-    Parameters:
-        X_train_processed (DataFrame): Preprocessed features for training.
-        y_train (Series): Target variable for training.
-        n_estimators (int, optional): Number of trees in the forest. Defaults to 10.
-        random_state (int, optional): Seed used by the random number generator. Defaults to 42.
-
-    Returns:
-        RandomForestRegressor: Trained Random Forest Regressor model.
-    """    
-    # Initialize the RFR model
-    regressor = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state)
-    # Train the model using the processed X_train and y_train
-    regressor.fit(X_train_processed, y_train)
-
-    return regressor
-
-# Call train_model
-regressor = train_model(X_train_processed, y_train)
+# Initialize the regressor
+regressor = RandomForestRegressor(random_state=42) # n_estimators=100
+# Train the regression model
+regressor.fit(X_train_processed, y_train)
 
 # Save the model to a file
-with gzip.open(r"model\random_forest_regressor.pkl", 'wb') as f:
+with gzip.open('./model/random_forest_regressor.pkl', 'wb') as f:
     pickle.dump(regressor, f)
 
 def evaluate_model(regressor, X_train_processed, y_train, X_test_processed, y_test):
@@ -246,7 +170,6 @@ def evaluate_model(regressor, X_train_processed, y_train, X_test_processed, y_te
 
     #Actual value and the predicted value
     reg_model_diff = pd.DataFrame({'Actual value': y_test, 'Predicted value': y_test_pred})
-    #print(reg_model_diff)
 
     print("Random Forest Regressor Model Evaluation:")
     print("Training score: {:.2f} %".format(train_r2*100))
