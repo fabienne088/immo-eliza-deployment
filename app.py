@@ -9,6 +9,8 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestRegressor
+from streamlit_extras.colored_header import colored_header
+
 
 # Read the csv file
 df = pd.read_csv("./data/cleaned_properties.csv")
@@ -21,18 +23,22 @@ y = df_house['price']
 # Split the data into training and test data
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=0.2)
 
+#colored_header(
+        #label="House price prediction app", description="This app will predict the price of a new house",
+        #color_name="violet-70",)
 
-st.title("House price prediction app")
-"""The features are: province, zip_code, total_area_sqm, surface_land_sqm, 
-nbr_bedrooms, equipped_kitchen, fl_furnished, fl_open_fire, fl_terrace, terrace_sqm, 
-fl_garden, garden_sqm, fl_swimming_pool, state_building, 
-primary_energy_consumption_sqm, epc, heating_type, fl_double_glazing.
-    """
+st.title(":green[House] price :blue[prediction] app")
+
+st.image('./src/the-logo-of-home-housing-residents-real-estate-with-a-concept-that-presents-rural-nature-with-a-touch-of-leaves-and-sunflowers-vector.jpg')
+
+st.write("This app will predict the price of a new house.")
+
+st.sidebar.text('The features are: province, postal code, total_area_sqm, surface_land_sqm, nbr_bedrooms, equipped_kitchen, fl_furnished, fl_open_fire, fl_terrace, terrace_sqm, fl_garden, garden_sqm, fl_swimming_pool, state_building, primary_energy_consumption_sqm, epc, heating_type, fl_double_glazing')
 
 # Location
 st.subheader("Location")
 
-province = st.selectbox("**Province!**",
+province = st.selectbox("**Province**",
    options=sorted(X['province'].unique()),
    index=None, placeholder="Select a province ...")
 st.write('You selected:', province)
@@ -46,11 +52,11 @@ st.write('The postal code is:', zip_code)
 st.divider()
 st.subheader("Infrastructure")
 
-surface_land_sqm = st.slider('**Surface Land (sqm)**', 
-    min_value=0.0, max_value=X['surface_land_sqm'].max())
+surface_land_sqm = st.number_input('**Surface Land (sqm)**', 
+    min_value=0.0, max_value=X['surface_land_sqm'].max(), step=1.00)
 st.write(f"The surface land is: {surface_land_sqm}","sqm")
 
-total_area_sqm = st.slider('**Total Living Area (sqm)**', 
+total_area_sqm = st.number_input('**Total Living Area (sqm)**', 
     min_value=0.0, max_value=X['total_area_sqm'].max())
 st.write(f"The total living area is: {total_area_sqm}","sqm")
 
@@ -99,8 +105,8 @@ st.write("Is there a terrace and/or a garden?")
 
 fl_terrace = int(st.checkbox('terrace', key='fl_terrace'))
 if fl_terrace:
-    st.write('Please provide Terrace surface sqm')
-    terrace_sqm = st.slider('**Terrace surface**', 
+    st.write('Please provide Terrace surface (sqm)')
+    terrace_sqm = st.number_input('**Terrace surface (sqm)**', 
                 min_value=0.0, max_value=X['terrace_sqm'].max())
     st.write(f"The terrace is: {terrace_sqm}","sqm")
 else:
@@ -108,13 +114,12 @@ else:
 
 fl_garden = int(st.checkbox('garden', key='fl_garden'))
 if fl_garden:
-    st.write('Please provide Garden surface sqm')
-    garden_sqm = st.slider('**Garden surface**', 
+    st.write('Please provide Garden surface (sqm)')
+    garden_sqm = st.number_input('**Garden surface (sqm)**', 
                min_value=0.0, max_value=X['garden_sqm'].max())
     st.write(f"The garden is: {garden_sqm}","sqm")
 else:
     garden_sqm = 0.00
-
 
 st.divider()
 st.subheader("Building condition")
@@ -127,7 +132,7 @@ st.write('You selected:', state_building)
 st.divider()
 st.subheader("Energy")
 
-primary_energy_consumption_sqm = st.slider('**Primary energy consumption**', 
+primary_energy_consumption_sqm = st.number_input('**Primary energy consumption**', 
     min_value=0.0, max_value=X['primary_energy_consumption_sqm'].max())
 st.write(f"The primary energy consumption is: {primary_energy_consumption_sqm}","sqm")
 
@@ -190,7 +195,7 @@ data = {
 new_data_df = pd.DataFrame(data, index=[0])
 print(new_data_df.info())
 
-#Perform prediction z-when button is clicked
+# Perform predictions when button is clicked
 if st.button('Predict'):
     predicted_price = predict(new_data_df)
     st.success(f"The price of the new house will be: € {predicted_price:.2f}")
