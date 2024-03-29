@@ -27,17 +27,19 @@ st.title(":green[House] price :blue[prediction] app")
 
 st.image('./src/the-logo-of-home-housing-residents-real-estate-with-a-concept-that-presents-rural-nature-with-a-touch-of-leaves-and-sunflowers-vector.jpg')
 
-st.write("This app will predict the price of your new house.")
+st.write("This app will predict the price of your new house. :house:")
 
-st.sidebar.markdown("The features are:"
-                " province, postal code, total area (sqm), surface land (sqm)," 
-                " number of bedrooms, equipped kitchen, furnished, open fire,"
-                " terrace, terrace (sqm), garden, garden (sqm), swimming pool,"
-                " building condition, primary energy consumption (sqm), epc,"
-                " heating type, and double glazing. ")
+with st.sidebar:
+    st.markdown("**The features :house_with_garden: are:**  \n province, "
+    " postal code, total area (sqm), surface land (sqm),"
+    " number of bedrooms, equipped kitchen, furnished, open fire,"
+    " terrace, terrace (sqm), garden, garden (sqm), swimming pool,"
+    " building condition, primary energy consumption (sqm), epc,"
+    " heating type, and double glazing.")    
+    
 
 # Location
-st.subheader("Location")
+st.subheader("Location :round_pushpin:")
 
 province = st.selectbox("**Province**",
    options=sorted(X['province'].unique()),
@@ -51,35 +53,35 @@ st.write('The postal code is:', zip_code)
 
 # Infrastructure
 st.divider()
-st.subheader("Infrastructure")
+st.subheader("Infrastructure :straight_ruler:")
 
-surface_land_sqm = st.number_input('**Surface Land (sqm)**', 
-    min_value=0.0, max_value=X['surface_land_sqm'].max(), step=1.00)
+surface_land_sqm = st.slider('**Surface Land (sqm)**', 
+    min_value=0.0, max_value=X['surface_land_sqm'].quantile(q=0.7), step=1.00)
 st.write(f"The surface land is: {surface_land_sqm}","sqm")
 
-total_area_sqm = st.number_input('**Total Living Area (sqm)**', 
-    min_value=0.0, max_value=X['total_area_sqm'].max())
+total_area_sqm = st.slider('**Total Living Area (sqm)**', 
+    min_value=0.0, max_value=X['total_area_sqm'].quantile(q=0.7), step=1.00)
 st.write(f"The total living area is: {total_area_sqm}","sqm")
 
 # Extra infrastructure
 st.write('**Extra infrastructure**')
 
-fl_swimming_pool = int(st.checkbox('swimming pool', key='fl_swimming_pool'))
+fl_swimming_pool = int(st.checkbox('swimming pool :ocean:', key='fl_swimming_pool'))
 if fl_swimming_pool:
-    st.write("There is a swimming pool!")
+    st.write("There is a swimming pool! :swimmer:")
 
 # Interior
 st.divider()
-st.subheader("Interior")
+st.subheader("Interior :frame_with_picture:")
 
-nbr_bedrooms = st.number_input('**number of bedrooms**',
-    min_value=0, max_value=int(X['nbr_bedrooms'].max()), step=1)
+nbr_bedrooms = st.number_input('**number of bedrooms** :bed:',
+    min_value=0, max_value=int(X['nbr_bedrooms'].quantile(q=0.9)), step=1)
 st.write(f"There are {nbr_bedrooms} bedrooms")
 
 # Extra interior elements
 st.subheader("Extra interior elements")
 
-furnished_str = st.selectbox("**Furnished**",
+furnished_str = st.selectbox("**Furnished** :couch_and_lamp:",
    options=["Yes", "No"],
    index=None,  # Set the default index
    placeholder="Select")
@@ -88,13 +90,13 @@ furnished = furnished_str == 'Yes'
 fl_furnished = int(furnished)
 st.write('You selected:', furnished_str)
 
-open_fire_str = st.selectbox("**Open fire**",
+open_fire_str = st.selectbox("**Open fire** :fire:",
    options=["Yes", "No"], index=None, placeholder="Select")
 open_fire = open_fire_str == 'Yes'
 fl_open_fire = int(open_fire)
 st.write('You selected:', open_fire_str)
 
-equipped_kitchen = st.selectbox("**Kitchen set-up**", 
+equipped_kitchen = st.selectbox("**Kitchen set-up** :fork_and_knife: ", 
     options=sorted(X['equipped_kitchen'].dropna().unique()),
     index=None, placeholder="Select set-up ...")
 st.write('You selected:', equipped_kitchen)
@@ -102,13 +104,13 @@ st.write('You selected:', equipped_kitchen)
 # Exterior
 st.divider()
 st.subheader("Exterior")
-st.write("Is there a terrace and/or a garden?")
+st.write("Is there a terrace and/or a garden? :house_with_garden:")
 
 fl_terrace = int(st.checkbox('terrace', key='fl_terrace'))
 if fl_terrace:
     st.write('Please provide Terrace surface (sqm)')
-    terrace_sqm = st.number_input('**Terrace surface (sqm)**', 
-                min_value=0.0, max_value=X['terrace_sqm'].max())
+    terrace_sqm = st.slider('**Terrace surface (sqm)**', 
+                min_value=0.0, max_value=X['terrace_sqm'].quantile(q=0.8), step=0.10)
     st.write(f"The terrace is: {terrace_sqm}","sqm")
 else:
     terrace_sqm = 0.00
@@ -116,14 +118,14 @@ else:
 fl_garden = int(st.checkbox('garden', key='fl_garden'))
 if fl_garden:
     st.write('Please provide Garden surface (sqm)')
-    garden_sqm = st.number_input('**Garden surface (sqm)**', 
-               min_value=0.0, max_value=X['garden_sqm'].max())
+    garden_sqm = st.slider('**Garden surface (sqm)**', 
+               min_value=0.0, max_value=X['garden_sqm'].quantile(q=0.8), step=0.10)
     st.write(f"The garden is: {garden_sqm}","sqm")
 else:
     garden_sqm = 0.00
 
 st.divider()
-st.subheader("Building condition")
+st.subheader("Building condition :toolbox:")
 
 state_building = st.selectbox("**State**", 
     options=sorted(X['state_building'].dropna().unique()),
@@ -132,9 +134,10 @@ st.write('You selected:', state_building)
 
 st.divider()
 st.subheader("Energy")
+st.image('./src/EPCwoningen_Y18-2309_VO_Label_06-01_Aplus_ivrxha.jpg')
 
-primary_energy_consumption_sqm = st.number_input('**Primary energy consumption**', 
-    min_value=0.0, max_value=X['primary_energy_consumption_sqm'].max())
+primary_energy_consumption_sqm = st.slider('**Primary energy consumption (sqm)**', 
+    min_value=0.0, max_value=X['primary_energy_consumption_sqm'].quantile(q=0.7), step=1.00)
 st.write(f"The primary energy consumption is: {primary_energy_consumption_sqm}","sqm")
 
 epc= st.selectbox("**Energy class**", 
@@ -142,12 +145,12 @@ epc= st.selectbox("**Energy class**",
     index=None, placeholder="Select class ...")
 st.write('You selected:', epc)
 
-heating_type= st.selectbox("**Heating type**", 
+heating_type= st.selectbox("**Heating type :sunny:**", 
     options=sorted(X['heating_type'].dropna().unique()),
     index=None, placeholder="Select heating type ...")
 st.write('You selected:', heating_type)
 
-double_glazing_str = st.selectbox("**Double glazing**",
+double_glazing_str = st.selectbox("**Double glazing** :window: ",
    options=["Yes", "No"],
    index=None, placeholder="Select")
 double_glazing = double_glazing_str == 'Yes'
