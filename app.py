@@ -9,7 +9,6 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestRegressor
-from streamlit_extras.colored_header import colored_header
 
 
 # Read the csv file
